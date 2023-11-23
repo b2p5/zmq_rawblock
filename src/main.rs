@@ -10,6 +10,7 @@ extern crate hex;
 use std::process::Command;
 use std::str;
 
+
 fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
     
     // Crear un contexto zmq
@@ -40,6 +41,7 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
     println!("Esperando mensajes (rawblock) del nodo Bitcoin ...");
     println!("\n");
 
+
     // Recibir y procesar mensajes
     loop {
         
@@ -58,8 +60,16 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
             Ok(tx_hex) => {
                 // Convert bytes to a hexadecimal string
                 let hex_string = tx_hex.to_hex::<String>();
+                println!("bloque: {:?}", hex_string);
 
-                process_hex_string(&hex_string);
+
+                // Get hash del bloque
+                let blockchain_info = get_blockchain_info().unwrap();
+                //transforn blockchain_info to json
+                let blockchain_info_json: serde_json::Value = serde_json::from_str(&blockchain_info).unwrap();
+                let hash_of_block = blockchain_info_json["bestblockhash"].to_string();
+
+                decode_raw_transaction(&hash_of_block.trim_matches('"'));                
 
                 Some(hex_string)
             },
@@ -78,38 +88,36 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 
-// Procesa los distintos tipos de cadenas hexadecimales recibidas del nodo Bitcoin
-fn process_hex_string(hex_string: &str) {
-    // Longitud de la cadena hexadecimal
-   let len = hex_string.len();
+// function to return getblockchaininfo
+fn get_blockchain_info() -> Result<String, String> {
 
-   match len {
-       _ if len > 10 => {
-            // Read hex string and convert to JSON
-            println!("Block:");
-            decode_raw_transaction(hex_string);
-       },
-       10 => {
-           println!("Topic: {:?}", "rawtx");
-       },
-       8 => {
-           let bytes = hex::decode(&hex_string).expect("Error al decodificar la cadena hexadecimal");
-           let text_string = String::from_utf8_lossy(&bytes);
-           println!("Sequence number: {} -> {:?}", &hex_string , text_string);
-           println!("\n");
-       },
-       _ => {
-           println!("Unrecognized hex string length: {}", len);
-       }
-   }
+    // Ejecutar el comando bitcoin-cli getblockchaininfo
+    let output = Command::new("bitcoin-cli")
+        .arg("getblockchaininfo")
+        .output()
+        .expect("Error al ejecutar el comando");
+
+    // Verificar si la ejecución fue exitosa
+    if output.status.success() {
+        // Convertir la salida a una cadena UTF-8
+        let decoded_output = str::from_utf8(&output.stdout).expect("Error al decodificar la salida");
+
+        // Devolver la salida decodificada
+        Ok(decoded_output.to_string())
+    } else {
+        // Convertir la salida de error a una cadena UTF-8
+        let stderr = str::from_utf8(&output.stderr).expect("Error al decodificar la salida de error");
+
+        // Devolver el mensaje de error
+        Err(stderr.to_string())
+    }
 }
 
-
-fn decode_raw_transaction(raw_transaction_hex: &str) {
+fn decode_raw_transaction(raw_transaction_hex: &str){
 
     // Ejecutar el comando bitcoin-cli decoderawtransaction
     let output = Command::new("bitcoin-cli")
-        .arg("decoderawblock")
+        .arg("getblock")
         .arg(raw_transaction_hex)
         .output()
         .expect("Error al ejecutar el comando");
@@ -142,3 +150,5 @@ fn main() {
         },
     }
 }
+
+
