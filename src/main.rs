@@ -54,8 +54,6 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
         
-        println!("\n");
-
         match subscriber.recv_bytes(0) {
             Ok(tx_hex) => {
                 // Convert bytes to a hexadecimal string
@@ -65,7 +63,7 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
 
                 // Get hash del bloque and show info of block in json
                 let blockchain_info = get_blockchain_info().unwrap();
-                //transforn blockchain_info to json
+                // Transforn blockchain_info into json
                 let blockchain_info_json: serde_json::Value = serde_json::from_str(&blockchain_info).unwrap();
                 let hash_of_block = blockchain_info_json["bestblockhash"].to_string();
 
@@ -78,7 +76,6 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
                 None
             },
         };
-        
         
         // Pausar para evitar un consumo excesivo de recursos
         thread::sleep(Duration::from_secs(5));
