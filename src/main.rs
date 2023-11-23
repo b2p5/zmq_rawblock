@@ -60,10 +60,10 @@ fn mempool_subscriber() -> Result<(), Box<dyn std::error::Error>> {
             Ok(tx_hex) => {
                 // Convert bytes to a hexadecimal string
                 let hex_string = tx_hex.to_hex::<String>();
-                println!("bloque: {:?}", hex_string);
+                // println!("bloque: {:?}", hex_string);
 
 
-                // Get hash del bloque
+                // Get hash del bloque and show info of block in json
                 let blockchain_info = get_blockchain_info().unwrap();
                 //transforn blockchain_info to json
                 let blockchain_info_json: serde_json::Value = serde_json::from_str(&blockchain_info).unwrap();
