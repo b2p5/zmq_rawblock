@@ -128,7 +128,7 @@ fn decode_raw_transaction(raw_transaction_hex: &str){
         let decoded_output = str::from_utf8(&output.stdout).expect("Error al decodificar la salida");
 
         // Imprimir la salida decodificada
-        println!("{}", decoded_output);
+        println!("Block: {}", decoded_output);
     } else {
         // Imprimir mensajes de error si la ejecución no fue exitosa
         let stderr = str::from_utf8(&output.stderr).expect("Error al decodificar la salida de error");
